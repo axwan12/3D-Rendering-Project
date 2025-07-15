@@ -1,0 +1,35 @@
+.container {
+    max-width: 65%; /* Constrain the width to 800 pixels */
+    margin: 0 auto; /* Center the container */
+}
+
+.sidenav {
+  height: 97%; /* Full-height: remove this if you want "auto" height */
+  width: 180px; /* Set the width of the sidebar */
+  position: fixed; /* Fixed Sidebar (stay in place on scroll) */
+  z-index: 1; /* Stay on top */
+  top: 0; /* Stay at the top */
+  left: -155px;
+  background-color: #111; /* Black */
+  padding-top: 20px;
+  overflow-y: auto;
+  transition: all 0.3s ease;
+  scrollbar-width: none;
+}
+
+.sidenav:hover {
+  left: 0;
+}
+
+/* The navigation menu links */
+.sidenav a {
+  padding: 6px 8px 6px 16px;
+  text-decoration: none;
+  font-size: 25px;
+  color: #818181;
+  display: block;
+}
+
+.sidenav a:hover {
+  color: #f1f1f1;
+}

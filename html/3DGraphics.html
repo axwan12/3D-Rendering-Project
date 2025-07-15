@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en-GB">
+
+<head>
+    	<meta charset="UTF-8">
+    	<title>3D Rendering Using Pygame</title>
+	<link rel="stylesheet" href="styles.css">
+</head>
+
+<div class="sidenav">
+	<a href="#3DStorage">Storing 3D Models</a>
+  	<a href="#Euler Rotations">Euler Rotations</a>
+ 	<a href="#Perspective">Perspective</a>
+	<a href="#backFace Culling">Back-Face Culling</a>
+	<a href="#z-depth ordering">Z-Depth Ordering</a>
+	<a href="#2D Projection Matrix">2D Projection Matrix</a>
+	<a href="#How My Program Works">How My Program Works</a>
+	<a href="#Critical Review">Critical Review</a>
+	<a href="#bibolography">Bibolography</a>
+</div>
+
+<body>
+	<div class="container">
+ 		<h1>3D Rendering Using Pygame</h1>
+		<h2 id="Maths Behind Rendering">Maths Behind Rendering</h2>
+		<h3 id="3DStorage">Storing 3D Models</h3>
+ 		<p>
+		3D models are stored as a list of vertices, and a list of faces. Each vertex in the list contains an x, y and z position for the point in 3D space. Each face in the list holds the position of the vertices, that make up the face, in the vertex list.</p>
+
+		<p>To extract this vertex and face data I created a python script to organise the vertices and faces into two separate arrays, this was the data module. The data mmodule stores the vertices and faces as arrays</p>	
+		<h3 id="Euler Rotations">Euler Rotations</h3>
+
+		<img src="images/EulerRotations.png" alt="Description of the image">
+		<figcaption>Figure 1: <cite>(How to Make a 3D Projection in Python | Rendering a Cube in 2D! (No OpenGL), n.d.)</cite></figcaption>
+
+		<p>Euler rotations can be used to rotate about an axis, when a vertex matrix is multiplied by one of the rotation matrices seen in figure 1, the point is rotated in that axis. When more than one Euler rotation is used a parenting order is created, this effectively tells us which order the matrices are multiplied with the vertex. The main issue with Euler rotations is that if two of the axis line up when rotation occurs, the axis lower down the parenting order will become locked to the one above it, this is known as gimbal lock, and it can cause weird motions in rotation. </p>
+
+		<h3 id="Quarternions">Quarternions</h3>
+		
+		<p>Quaternions are an alternate method of rotation that rely on a number system like that of complex numbers. Quaternions are in the same form as complex numbers; however, the complex part is split up into an I, j & k direction allowing for another dimension of rotation as opposed to 2D plane rotations in complex numbers <cite>(3Blue1Brown, 2018)</cite>.</p>
+
+		<p>The underlying maths is multiplying two quaternions together to compute a rotation. The specified axis to rotate about is used to calculate our first quaternion, by calculating a norm of the squared axis to represent the axis on the unit sphere. The quaternion for the axis is then assembled in the form:</p>
+		
+		<img src="images/Quarternion1.png" alt="Description of the image">
+
+		<p>Where “Theta” is the angle of rotation. The x, y and z columns in the vertex are also of the form:</p>
+
+		<img src="images/Quarternion2.png" alt="Description of the image">
+
+		<p>The two are multiplied together, the output is then multiplied by the conjugate/inverse of the axis quaternion, this prevents the object rotation away around a fourth axis which would appear as if the object were shrinking and growing as it rotates. The order of quaternion multiplication matters as it is noncommutative <cite>(3Blue1Brown, 2018)</cite>, the rules are as follows in figure 2: </p>
+
+		<img src="images/QuarternionMult.png" alt="Description of the image">
+		<figcaption>Figure 2: <cite>(3Blue1Brown, 2018)</cite></figcaption>
+
+		<p>The final output is our rotated point, rotated about the axis specified.</p>
+
+		<h3 id="Reflection">Reflecton</h3>
+
+		<p>Reflection of a 3D object is done by multiplying all the vertex of the object by the appropriate reflection matrix. The reflection matrix resembles the identity matrix, however the axis that require reflecting about becomes negative.</p>
+
+		<img src="images/ReflectionMatrix.png" alt="Description of the image">
+		<figcaption>Figure 3: (A-Level Further Maths: C3-04 Matrices: AQA ONLY Deriving the Reflection Matrix, n.d.)</figcaption>
+
+		<p>The matrix in figure 3 reflects points about x=0, however this can be used to reflect in other/multiple axis (A-Level Further Maths: C3-04 Matrices: AQA ONLY Deriving the Reflection Matrix, n.d.). In my project I simplify multiplied the reflected axis of the vertices by -1 as this was the same effect, just less computational.</p>
+
+		<h3 id="Perspective">Perspective</h3>
+
+		<p>Perspective is used to make points that are further away appear closer to the centre of the cameras view, this starts by imagining our computer screen as a window and making things further away, on the other side appear smaller.</p>
+		<img src="images/Perspective.png" alt="Description of the image">
+		<figcaption>Figure 4</figcaption>
+
+		<p>As my Ms-paint helps to address, points further away can be scaled to give them depth and perspective. To get our x or y point adjusted for depth, we take our point ( x or y) and multiply it by the distance of the viewer from the screen (distance A), this is then divided by the distance of the object from the screen (distance B), this is the new point adjusted for perspective <cite>(The Math behind (Most) 3D Games - Perspective Projection, n.d.)</cite>.</p>
+
+		<h3 id="backFace Culling">Back-Face Culling</h3>
+		
+		<p>Back-Face Culling is a method of optimizing a rendering program, it works by only rendering the faces that are orientated towards the camera. There is no point rendering the back faces as these cannot be seen.</p>
+
+		<p>To understand this method of optimization, first understand that 3D modelling software (such as blender) store the points around a face, in the face data, in an anticlockwise direction. By storing points in a face anticlockwise we can tell if the face has turned to face away from the camera if the points around the face are now clockwise <cite>(Backface Culling - Friday Minis 124, n.d.)</cite>.</p>
+
+		<h3 id="TestingPoints">Testing If Points Around a Face are Clockwise or Anti-Clockwise for Back-Face Culling</h3>
+
+		<p>As the face data orders the faces in their order, a line vector is created between each vertex in the face list and the following vertex, if this process is done for the final vertex in the list the first vertex will be the following vertex as the face is a closed polygon.<p>
+
+		<p>The line vector is made a 2*2 matrix where the first column is the x and y for the chosen vertex and the second column is the x and y for the following vertex around the face.<p>
+
+		<p>Each line matrix around the face then has its determinant calculated, these determinants are then summed together. If the sum of the determinants is negative then the points around the face are ordered clockwise, if the sum of the determinants is positive then the points mode anticlockwise around the face and can therefore be rendered. (Note: if the sum of the determinants is equal to zero then the face is collinear and should not be rendered either) (How to Determine If a List of Polygon Points Are in Clockwise Order?, n.d.).</p>
+
+		<h3 id="z-depth ordering">Z-Depth Ordering</h3>
+
+		<p>Even once the back facing faces of the models had been culled there was still potential for front facing faces, that where behind another face, to render in the wrong order. To render these faces in the correct order so that the front faces where visible over the faces behind a quicksort algorithm was used to order the faces by their average z (depth) value. Once the faces where ordered the list of faces were sent to the rendering algorithm. The faces where to be rendered back to front, with the furthest faces getting rendered first.</p>
+
+		<h3 id="2D Projection Matrix">2D Projection Matrix</h3>
+		
+		<img src="images/2DProjection.png" alt="Description of the image">
+		<figcaption>Figure 5 (How to Make a 3D Projection in Python | Rendering a Cube in 2D! (No OpenGL), n.d.)</figcaption>
+
+		<p>The 2D projection matrix (figure 5) removes the z-axis (or depth) from a point/vertex.  Using the previously mentioned data module, each of the vertex in the 3D model file are converted into a 3*1 matrix containing the x, y and z positions of the vertex. The position matrix of each vertex can be multiplied by the 2D projection matrix to get the position of the vertex in 2D space.</p>
+
+		<p>For my project I opted to just take the x and y components of each point when rendering instead, however the theory is still the same, this method just required less computation.</p>
+
+		<h2 id="How My Program Works">How My Program Works</h2>
+
+		<p>The program I have written works by, first extracting vertex and face data from a txt file. The extracted vertex and face data is then transformed, this could be reflection, translation rotation. Next perspective is applied to the points in the object. Once the vertex and face data has been transformed appropriately the back-face culling algorithm removes the back faces from the rendering queue, the face depth sorting algorithm then sorts the face queue so that faces with a further average z-depth would be rendered first, so the visible face would be rendered on top. The rendering algorithm then tells Pygame where to render polygons and lines.</p>
+
+		<h2 id="Critical Review">Critical Review</h2>
+
+		<p>Whilst my project achieved the goals I set at the beginning and more, I feel there are some improvements that could be made to make the renderer more robust.</p>
+
+		<p>The issue is that some polygons occasionally render over each other, this is indicative of the z-depth ordering for the average depth of a face not working properly. One solution to this would use z-depth buffering, where the pixels of each polygon are drawn front to back based on depth, this makes it impossible for polygons to be drawn incorrectly. However, z-depth buffering cannot be used with Pygame as the only functionality for drawing polygons is by referencing the vertices, individual pixels cannot be referenced. If I were to make improvements, I would redo the project in another programming language (perhaps c++) where z-depth buffering would be possible.</p>
+
+		<p>Another weak point of this project is the organisation of my code, I feel with more time I could eventually tidy the code up to a point where I could just call a function to render a shape and it would. It would also be nice to implement some object-oriented programming, so that I could give different objects different properties, such as scale, rotation and position; this would be useful if I wanted to be able to create new objects when the program is running. Implementing object orientated code would make my program simpilar and more modular.</p>
+
+		<h2 id="bibolography">Bibolography</h2>
+
+		<p><cite>(How to Make a 3D Projection in Python | Rendering a Cube in 2D! (No OpenGL), n.d.)<cite>How to make a 3D projection in Python | Rendering a cube in 2D! (No OpenGL). (n.d.). www.youtube.com. <a href="https://www.youtube.com/watch?v=qw0oY6Ld-L0">https://www.youtube.com/watch?v=qw0oY6Ld-L0</a></p>
+
+		<p><cite>(3Blue1Brown, 2018)</cite>3Blue1Brown. (2018). Quaternions and 3d rotation, explained interactively [YouTube Video]. In YouTube. <a href="https://www.youtube.com/watch?v=zjMuIxRvygQ">https://www.youtube.com/watch?v=zjMuIxRvygQ</a></p>
+	
+		<p><cite>(The Math behind (Most) 3D Games - Perspective Projection, n.d.)</cite>The Math behind (most) 3D games - Perspective Projection. (n.d.). Www.youtube.com. <a href="https://www.youtube.com/watch?v=U0_ONQQ5ZNM">https://www.youtube.com/watch?v=U0_ONQQ5ZNM</a></p>
+
+		<p><cite>(A-Level Further Maths: C3-04 Matrices: AQA ONLY Deriving the Reflection Matrix, n.d.)</cite>A-Level Further Maths: C3-04 Matrices: AQA ONLY Deriving the Reflection Matrix. (n.d.). Www.youtube.com. Retrieved April 24, 2024, from <a href"https://www.youtube.com/watch?v=GaC8nhBl_AA">https://www.youtube.com/watch?v=GaC8nhBl_AA</a></p>
+
+		<p><cite>(Backface Culling - Friday Minis 124, n.d.)</cite>Backface Culling - Friday Minis 124. (n.d.). Www.youtube.com. <a href="https://www.youtube.com/watch?v=Idrnfhv_lYk">https://www.youtube.com/watch?v=Idrnfhv_lYk</a></p>
+
+		<p><cite>(How to Determine If a List of Polygon Points Are in Clockwise Order?, n.d.)</cite>How to determine if a list of polygon points are in clockwise order? (n.d.). Stack Overflow. Retrieved April 24, 2024, from <a href="https://stackoverflow.com/questions/1165647/how-to-determine-if-a-list-of-polygon-points-are-in-clockwise-order#:~:text=Here%27s%20a%20simple%20one%20that%20will%20work%20with">https://stackoverflow.com/questions/1165647/how-to-determine-if-a-list-of-polygon-points-are-in-clockwise-order#:~:text=Here%27s%20a%20simple%20one%20that%20will%20work%20with</a></p>
+		
+	</div>
+</body>
+
+</html>
